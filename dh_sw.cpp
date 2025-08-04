@@ -455,42 +455,26 @@ NN_DIGIT c
 }
 
 
+/*** This function communicates with hardware ***/
 void dh_sw::NN_DigitDivHH (
-  NN_HALF_DIGIT &aHigh,
-  NN_DIGIT t[2], 
-  NN_DIGIT c
+NN_HALF_DIGIT &aHigh,
+NN_DIGIT t[2], 
+NN_DIGIT c
 )
 {
-  // 1. Send inputs to hardware via signals
   to_hw0.write(t[0]);
   to_hw1.write(t[1]);
   to_hw2.write(c);
-  to_hw3.write(aHigh);  // Might not be needed if aHigh is only an output
+  to_hw3.write(aHigh);
   
+// This computation is now performed in hardware.
+/* Synchronization is done via blocking read/write 
+   (to be replaced by handshaking). */
 
-  hw_enable.write(true);
-  
-  // 3. Wait for done to go high (hardware completed)
-  while (true)
-    {
-      if (hw_done.read() == true) break;
-      wait();
-    }
-
-  // 4. Read results
   t[0] = from_hw0.read();
   t[1] = from_hw1.read();
   aHigh = from_hw2.read();
-
-  hw_enable.write(false);
-
-  // 6. Wait for done to go low (hardware acknowledges end of transaction)
-  while (true)
-    {
-      if (hw_done.read() == false) break;
-      wait();
-    }
-
+  
 }
 
 /*** This function computes reference values for verification ***/
