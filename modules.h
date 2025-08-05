@@ -91,5 +91,89 @@ SC_MODULE (bit_shift)
     }
 };
 
+SC_MODULE (reg)
+{
+	sc_in_clk clk;
+	sc_in<NN_DIGIT> in_data;
+	sc_in<bool> load_data;
+	sc_out<NN_DIGIT> out_data;
+
+	void run_reg();
+
+	SC_CTOR (reg)
+	{
+		SC_CTHREAD(run_reg, clk.pos());
+		out_data.initialize(0);
+	}
+};
+
+SC_MODULE (half_reg)
+{
+	sc_in_clk clk;
+	sc_in<NN_HALF_DIGIT> in_data;
+	sc_in<bool> load_data;
+	sc_out<NN_HALF_DIGIT> out_data;
+
+	void run_reg();
+
+	SC_CTOR (half_reg)
+	{
+		SC_CTHREAD(run_reg, clk.pos());
+		out_data.initialize(0);
+	}
+};
+
+SC_MODULE(zero_extender)
+{
+    sc_in<NN_HALF_DIGIT> in_data;
+    sc_out<NN_DIGIT> out_data;
+
+    void run_extender();
+
+    SC_CTOR(zero_extender) {
+        SC_METHOD(run_extender);
+        sensitive << in_data;
+    }
+};
+
+SC_MODULE(loop_engine) {
+    
+    sc_in_clk clk;
+    sc_in<bool> start;
+    sc_in<bool> reset;
+
+    
+    sc_in<NN_DIGIT> cHigh, cLow;
+    sc_in<NN_DIGIT> t0_in, t1_in;
+    sc_in<NN_HALF_DIGIT> aHigh_in;
+
+    
+    sc_out<NN_DIGIT> t0_out, t1_out;
+    sc_out<NN_HALF_DIGIT> aHigh_out;
+    sc_out<bool> done;
+
+    void run();
+
+    SC_CTOR(loop_engine) {
+        SC_CTHREAD(run, clk.pos());
+        reset_signal_is(reset, true);
+    }
+};
+
+SC_MODULE(controller) {
+    sc_in_clk clk;
+    sc_in<bool> hw_enable;
+    sc_out<bool> load_input, load_output;
+    sc_out<bool> loop_start, loop_reset;
+    sc_out<bool> hw_done;
+    sc_in<bool> loop_done;
+
+    void fsm();
+
+    SC_CTOR(controller) {
+        SC_CTHREAD(fsm, clk.pos());
+    }
+};
+
 
 #endif /* end _MODULES_H_ */
